@@ -32,11 +32,11 @@ loss_grad_scores <- function(y, scores, K){
   exp_scores <- exp(scores)
   probabilities <- exp_scores / rowSums(exp_scores)
   
-  loss = -mean(rowSums(y_encode * log(softmax_probs)))
+  loss = -mean(rowSums(y_encode * log(probabilities)))
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
-  predicitions = max.col(probabilities) - 1
+  predictions = max.col(probabilities) - 1
   error = mean(predictions != y) * 100
   
   # [ToDo] Calculate gradient of loss with respect to scores (output)
@@ -57,7 +57,7 @@ loss_grad_scores <- function(y, scores, K){
 # b2 - a vector of size K of intercepts
 # lambda - a non-negative scalar, ridge parameter for gradient calculations
 one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
-  n <- nrow(x)
+  n <- nrow(X)
   # [To Do] Forward pass
   # From input to hidden 
   H1 <- X %*% W1 + matrix(b1, nrow=n, ncol=length(b1), byrow=TRUE)
@@ -72,7 +72,7 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   grad_scores <- out$grad
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
   dW2 <- crossprod(H, grad_scores) + lambda * W2
-  db2 <- colsums(grad_scores)
+  db2 <- colSums(grad_scores)
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
   dhidden <- tcrossprod(grad_scores, W2) * (H1 > 0)
   dW1 <- crossprod(X, dhidden) + lambda * W1
@@ -123,11 +123,11 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
 
   # [ToDo] Initialize b1, b2, W1, W2 using initialize_bw with seed as seed,
   # and determine any necessary inputs from supplied ones
-  initalize_parameters <- initialize_bw(p=ncol(X), hidden_p=hidden_p, K = length(unique(y)), scale = scale, seed = seed)
-  b1 <- initalize_parameters$b1
+  initialize_parameters <- initialize_bw(p=ncol(X), hidden_p=hidden_p, K = length(unique(y)), scale = scale, seed = seed)
+  b1 <- initialize_parameters$b1
   b2 <- initialize_parameters$b2
-  W1 <- initalize_parameters$W1
-  W2 <- initalize_parameters$W2
+  W1 <- initialize_parameters$W1
+  W2 <- initialize_parameters$W2
   # Initialize storage for error to monitor convergence
   error = rep(NA, nEpoch)
   error_val = rep(NA, nEpoch)
@@ -137,13 +137,13 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Start iterations
   for (i in 1:nEpoch){
     # Allocate bathes
-    batchids = sample(rep(1:mBatch, length.out = n), size = n)
-    batch_errors <- numeric(mBatch)
+    batchids = sample(rep(1:mbatch, length.out = n), size = n)
+    batch_errors <- numeric(mbatch)
     # [ToDo] For each batch
     #  - do one_pass to determine current error and gradients
     #  - perform SGD step to update the weights and intercepts
-    for (batch in 1:mBatch){
-      batch_indices <- which(batchids = batch)
+    for (batch in 1:mbatch){
+      batch_indices <- which(batchids == batch)
       X_batch <- X[batch_indices, ]
       y_batch <- y[batch_indices]
       forward_out <- one_pass(X_batch, y_batch, length(b2), W1, b1, W2, b2, lambda)
