@@ -24,17 +24,24 @@ initialize_bw <- function(p, hidden_p, K, scale = 1e-3, seed = 12345){
 # y - a vector of size n of class labels, from 0 to K-1
 # K - number of classes
 loss_grad_scores <- function(y, scores, K){
-  
+  n <- nrow(scores)
+  #getting Y in a more usable format, by encoding 1 when it is of the given class
+  y_encode <- matrix(0, nrow = n, ncol = K)
+  y_encode[cbind(1:n, y + 1)] <- 1
   # [ToDo] Calculate loss when lambda = 0
-  # loss = ...
+  exp_scores <- exp(scores)
+  probabilities <- exp_scores / rowSums(exp_scores)
+  
+  loss = -mean(rowSums(y_encode * log(softmax_probs)))
   
   # [ToDo] Calculate misclassification error rate (%)
   # when predicting class labels using scores versus true y
-  # error = ...
+  predicitions = max.col(probabilities) - 1
+  error = mean(predictions != y) * 100
   
   # [ToDo] Calculate gradient of loss with respect to scores (output)
   # when lambda = 0
-  # grad = ...
+  grad = (probabilities - y_encode) / n 
   
   # Return loss, gradient and misclassification error on training (in %)
   return(list(loss = loss, grad = grad, error = error))
