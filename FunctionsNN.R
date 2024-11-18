@@ -135,7 +135,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Set seed for reproducibility
   set.seed(seed)
   # Start iterations
-  for (i in 1:nEpoch){
+  for (epoch in 1:nEpoch){
     # Allocate bathes
     batchids = sample(rep(1:mbatch, length.out = n), size = n)
     batch_errors <- numeric(mbatch)
