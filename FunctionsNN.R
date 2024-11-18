@@ -58,9 +58,6 @@ loss_grad_scores <- function(y, scores, K){
 # lambda - a non-negative scalar, ridge parameter for gradient calculations
 one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   n <- nrow(X)
-  cat("X dimensions: ", dim(X), "\n")
-  cat("W1 dimensions: ", dim(W1), "\n")
-  cat("b1 dimensions: ", length(b1), "\n")
   # [To Do] Forward pass
   # From input to hidden 
   H1 <- X %*% W1 + matrix(b1, nrow=n, ncol=length(b1), byrow=TRUE)
@@ -152,11 +149,11 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
       forward_out <- one_pass(X_batch, y_batch, length(b2), W1, b1, W2, b2, lambda)
       grads <- forward_out$grads
       batch_errors[batch] <- forward_out$error
+      W1 <- W1 - rate * grads$dW1
+      W2 <- W2 - rate * grads$dW2
+      b1 <- b1 - rate * grads$db1
+      b2 <- b2 - rate * grads$db2
       
-      W1 <- W1 - rate * grads$W1
-      W2 <- W2 - rate * grads$W2
-      b1 <- b1 - rate * grads$b1
-      b2 <- b2 - rate * grads$b2
     }
     # [ToDo] In the end of epoch, evaluate
     # - average training error across batches
