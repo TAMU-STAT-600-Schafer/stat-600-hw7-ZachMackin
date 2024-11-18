@@ -50,22 +50,26 @@ loss_grad_scores <- function(y, scores, K){
 # b2 - a vector of size K of intercepts
 # lambda - a non-negative scalar, ridge parameter for gradient calculations
 one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
-
+  n <- nrow(x)
   # [To Do] Forward pass
   # From input to hidden 
-  
+  H1 <- X %*% W1 + matrix(b1, nrow=n, ncol=length(b1), byrow=TRUE)
   # ReLU
-  
+  H <- (H1 + abs(H1))/2
   # From hidden to output scores
- 
+  scores <- H %*% W2 + matrix(b2, nrow=n, ncol=length(b2), byrow=TRUE)
   
   # [ToDo] Backward pass
   # Get loss, error, gradient at current scores using loss_grad_scores function
-
+  out <- loss_grad_scores(y, scores, K)
+  grad_scores <- out$grad
   # Get gradient for 2nd layer W2, b2 (use lambda as needed)
-  
+  dW2 <- crossprod(H, grad_scores) + lambda * W2
+  db2 <- colsums(grad_scores)
   # Get gradient for hidden, and 1st layer W1, b1 (use lambda as needed)
-  
+  dhidden <- tcrossprod(grad_scores, W2) * (H1 > 0)
+  dW1 <- crossprod(X, dhidden) + lambda * W1
+  db1 <- colSums(dhidden)
   # Return output (loss and error from forward pass,
   # list of gradients from backward pass)
   return(list(loss = out$loss, error = out$error, grads = list(dW1 = dW1, db1 = db1, dW2 = dW2, db2 = db2)))
