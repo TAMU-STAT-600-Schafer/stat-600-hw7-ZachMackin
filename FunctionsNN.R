@@ -92,9 +92,10 @@ one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
 # b2 - a vector of size K of intercepts
 evaluate_error <- function(Xval, yval, W1, b1, W2, b2){
   # [ToDo] Forward pass to get scores on validation data
-  
+  forward_output <- one_pass(Xval, yval, length(b2),W1, b1, W2, b2, 0)
   # [ToDo] Evaluate error rate (in %) when 
   # comparing scores-based predictions with true yval
+  error <- forward_output$error
   
   return(error)
 }
@@ -122,7 +123,11 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
 
   # [ToDo] Initialize b1, b2, W1, W2 using initialize_bw with seed as seed,
   # and determine any necessary inputs from supplied ones
-  
+  initalize_parameters <- initialize_bw(p=ncol(X), hidden_p=hidden_p, K = length(unique(y)), scale = scale, seed = seed)
+  b1 <- initalize_parameters$b1
+  b2 <- initialize_parameters$b2
+  W1 <- initalize_parameters$W1
+  W2 <- initalize_parameters$W2
   # Initialize storage for error to monitor convergence
   error = rep(NA, nEpoch)
   error_val = rep(NA, nEpoch)
@@ -132,14 +137,29 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
   # Start iterations
   for (i in 1:nEpoch){
     # Allocate bathes
-    batchids = sample(rep(1:nBatch, length.out = n), size = n)
+    batchids = sample(rep(1:mBatch, length.out = n), size = n)
+    batch_errors <- numeric(mBatch)
     # [ToDo] For each batch
     #  - do one_pass to determine current error and gradients
     #  - perform SGD step to update the weights and intercepts
-    
+    for (batch in 1:mBatch){
+      batch_indices <- which(batchids = batch)
+      X_batch <- X[batch_indices, ]
+      y_batch <- y[batch_indices]
+      forward_out <- one_pass(X_batch, y_batch, length(b2), W1, b1, W2, b2, lambda)
+      grads <- forward_out$grads
+      batch_errors[batch] <- forward_out$error
+      
+      W1 <- W1 - rate * grads$W1
+      W2 <- W2 - rate * grads$W2
+      b1 <- b1 - rate * grads$b1
+      b2 <- b2 - rate * grads$b2
+    }
     # [ToDo] In the end of epoch, evaluate
     # - average training error across batches
     # - validation error using evaluate_error function
+    error[epoch] <- mean(batch_errors)
+    error_val[epoch] <- evaluate_error(Xval, yval, W1, b1, W2, b2)
   }
   # Return end result
   return(list(error = error, error_val = error_val, params =  list(W1 = W1, b1 = b1, W2 = W2, b2 = b2)))
