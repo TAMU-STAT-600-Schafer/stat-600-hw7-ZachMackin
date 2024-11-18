@@ -58,6 +58,9 @@ loss_grad_scores <- function(y, scores, K){
 # lambda - a non-negative scalar, ridge parameter for gradient calculations
 one_pass <- function(X, y, K, W1, b1, W2, b2, lambda){
   n <- nrow(X)
+  cat("X dimensions: ", dim(X), "\n")
+  cat("W1 dimensions: ", dim(W1), "\n")
+  cat("b1 dimensions: ", length(b1), "\n")
   # [To Do] Forward pass
   # From input to hidden 
   H1 <- X %*% W1 + matrix(b1, nrow=n, ncol=length(b1), byrow=TRUE)
@@ -123,7 +126,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
 
   # [ToDo] Initialize b1, b2, W1, W2 using initialize_bw with seed as seed,
   # and determine any necessary inputs from supplied ones
-  initialize_parameters <- initialize_bw(p=ncol(X), hidden_p=hidden_p, K = length(unique(y)), scale = scale, seed = seed)
+  initialize_parameters <- initialize_bw(ncol(X), hidden_p, length(unique(y)), scale = scale, seed = seed)
   b1 <- initialize_parameters$b1
   b2 <- initialize_parameters$b2
   W1 <- initialize_parameters$W1
@@ -144,7 +147,7 @@ NN_train <- function(X, y, Xval, yval, lambda = 0.01,
     #  - perform SGD step to update the weights and intercepts
     for (batch in 1:mbatch){
       batch_indices <- which(batchids == batch)
-      X_batch <- X[batch_indices, ]
+      X_batch <- X[batch_indices, , drop=FALSE]
       y_batch <- y[batch_indices]
       forward_out <- one_pass(X_batch, y_batch, length(b2), W1, b1, W2, b2, lambda)
       grads <- forward_out$grads
